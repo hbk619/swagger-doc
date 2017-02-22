@@ -1,11 +1,14 @@
-sbtPlugin := true
-
 name := "swagger-doc"
 
-version := "0.1"
+lazy val models = project
+    .settings(Common.settings: _*)
 
-scalaVersion := "2.10.3"
+lazy val plugin = project
+    .dependsOn(models)
+    .settings(Common.settings: _*)
+    .settings(libraryDependencies ++= Dependencies.common)
 
-organization := "com.swaggerdoc"
-
-sbtVersion := "0.13.12"
+lazy val akka = project
+    .dependsOn(models)
+    .settings(Common.settings: _*)
+    .settings(libraryDependencies ++= Dependencies.akka)
