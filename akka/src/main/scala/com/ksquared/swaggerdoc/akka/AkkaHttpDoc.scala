@@ -1,4 +1,4 @@
-package com.swaggerdoc.akka
+package com.ksquared.swaggerdoc.akka
 
 import org.apache.commons.io.FileUtils
 import spray.json._
@@ -12,7 +12,7 @@ import java.io.File
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.RouteTest
-import com.swaggerdoc.models._
+import com.ksquared.swaggerdoc.models._
 
 trait AkkaHttpRestDoc {
   self: RouteTest =>

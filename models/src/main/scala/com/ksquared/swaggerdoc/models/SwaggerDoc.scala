@@ -1,4 +1,4 @@
-package com.swaggerdoc.models
+package com.ksquared.swaggerdoc.models
 
 case class Property(`type`: String)
 

@@ -1,11 +1,11 @@
-package com.swaggerdoc.plugin
+package com.ksquared.swaggerdoc.plugin
 
 import java.io.File
 
 import org.apache.commons.io.FileUtils
 import spray.json.DefaultJsonProtocol._
 import spray.json._
-import com.swaggerdoc.models._
+import com.ksquared.swaggerdoc.models._
 import sbt.TaskKey
 
 import scala.collection.JavaConverters._

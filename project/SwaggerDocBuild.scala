@@ -4,5 +4,5 @@ import Keys._
 object SwaggerDocBuild extends sbt.Build {
 
   import Dependencies._
-  val NamePrefix = "Swagger-doc"
+  val NamePrefix = "swagger-doc"
 }
