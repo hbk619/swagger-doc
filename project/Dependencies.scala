@@ -5,7 +5,8 @@ object Dependencies {
 
   val akkaHttpVersion = "10.0.3"
   val akkaDeps: Seq[ModuleID] =  Seq(
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion,
+    "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion
   )
 
   val scala: Seq[ModuleID] = Seq(
@@ -20,5 +21,9 @@ object Dependencies {
     commonsIo
   )
 
-  val akka = common ++ akkaDeps ++ scala
+  val testing: Seq[ModuleID] = Seq(
+    "org.scalatest" % "scalatest_2.11"  % "3.0.1"   % "test",
+    "org.mockito" % "mockito-all" % "1.10.19" % "test"
+  )
+  val akka = common ++ akkaDeps ++ scala ++ testing
 }

@@ -1,7 +1,9 @@
 Swagger Doc
 ========
 
-This project allows you to generate swagger json from Akka Http tests
+This project allows you to generate swagger json from Akka Http tests.
+It's inspired by https://github.com/kodemaniak/akka-http-restdoc which creates
+some generic documentation from your tests.
 
 It has 2 components you need:
 
@@ -12,7 +14,7 @@ It has 2 components you need:
 
 Add the dependency:
 
-`"com.swaggerdoc" %% "swagger-doc-akka" % "0.1"`
+`"com.ksquared" %% "swagger-doc-akka" % "0.1"`
 
 Then write a test!
 
@@ -22,8 +24,8 @@ class UserRoutesSpec extends WordSpec with ScalatestRouteTest with AkkaHttpRestD
     "the route" should {
         "do some things" in {
             val body = SomeBody("123")
-            performWithBody(Post("/some/url", body)
-                .checkAndDocument("some route") {
+            setupRequestWithBody(Post("/some/url", body)
+                .perform("some route") {
                   status shouldEqual OK
                   // rest of assertions
                 }
@@ -38,7 +40,7 @@ Mixin the AkkaHttpRestDoc and use the performWithBody function for requests that
 
 In `plugins.sbt`
 
-`addSbtPlugin("com.swaggerdoc" % "swagger-doc-generator" % "0.1")`
+`addSbtPlugin("com.ksquared" % "swagger-doc-generator" % "0.1")`
 
 The `swagger-doc` command will automatically become available.
 
