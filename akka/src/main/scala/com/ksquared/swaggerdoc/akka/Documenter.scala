@@ -12,6 +12,10 @@ import scala.collection.breakOut
 class Documenter extends Formatters {
   val swaggerDocs = new SwaggerDocs()
   val dir = new File("restdoc/generated")
+  val StringType = typeOf[String]
+  val IntType = typeOf[Int]
+  val BooleanType = typeOf[Boolean]
+  val ListType = typeOf[List[_]]
 
   def documentRequest[T](req: HttpRequest, body: T) = {
     val model = createModel(body)
@@ -50,9 +54,19 @@ class Documenter extends Formatters {
       case m: MethodSymbol if m.isGetter && m.isPublic => m
     }
     val properties: Map[String, Property] = accessors.map(m => {
-      (m.name.toString, Property("string"))
+      (m.name.toString, createProperty(m))
     })(breakOut)
 
     Model(body.getClass.getSimpleName, properties)
+  }
+
+  private def createProperty(propertyMethodSymbol: MethodSymbol): Property = {
+    propertyMethodSymbol.returnType match {
+      case StringType => Property("string")
+      case IntType => Property("integer")
+      case BooleanType => Property("boolean")
+      case x if x <:< ListType => Property("array")
+      case _ => Property("")
+    }
   }
 }

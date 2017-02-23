@@ -15,14 +15,14 @@ class DocumenterSpec extends WordSpec with Matchers
   with ScalatestRouteTest with SprayJsonSupport
   with DefaultJsonProtocol with MockitoSugar {
 
-  case class TestClass(id: String)
-  implicit val testClassFormatter = jsonFormat1(TestClass)
+  case class TestClass(id: String, value: Int, isTrue: Boolean, someList: List[String])
+  implicit val testClassFormatter = jsonFormat4(TestClass)
 
   "Documenter" should {
 
     "record request" in {
       val documenter = new Documenter()
-      val body = TestClass("123")
+      val body = TestClass("123", 21, false, List("bob"))
       val req = Post("/test", body)
 
       documenter.documentRequest(req, body)
@@ -31,9 +31,12 @@ class DocumenterSpec extends WordSpec with Matchers
       documenter.swaggerDocs.swagger.api.size shouldEqual 1
       val model: Option[Model] = documenter.swaggerDocs.swagger.models.get("TestClass")
       model.isDefined shouldBe true
-      model.get.properties.keys.size shouldEqual 1
-      model.get.properties.get("id").isDefined shouldBe true
+      model.get.properties.keys.size shouldEqual 4
       model.get.properties.get("id").get.`type` shouldBe "string"
+      model.get.properties.get("value").get.`type` shouldBe "integer"
+      model.get.properties.get("isTrue").get.`type` shouldBe "boolean"
+      model.get.properties.get("someList").get.`type` shouldBe "array"
+
       val api: Api = documenter.swaggerDocs.swagger.api.head
       api.path shouldEqual "/test"
       api.operations.size shouldEqual 1
