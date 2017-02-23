@@ -2,7 +2,7 @@ package com.ksquared.swaggerdoc.models
 
 case class Property(`type`: String)
 
-case class Parameter(`type`: String)
+case class Parameter(`type`: String, paramType: String, name: String)
 
 case class Model(name: String, properties: Map[String, Property])
 

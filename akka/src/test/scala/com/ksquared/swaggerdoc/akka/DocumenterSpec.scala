@@ -45,6 +45,28 @@ class DocumenterSpec extends WordSpec with Matchers
       api.operations.head.parameters.head.`type` shouldEqual "TestClass"
     }
 
+    "record path regex request" in {
+      val documenter = new Documenter()
+      val req = Get("/users/123456/nickname/98765")
+
+      documenter.documentRequest(req, ".*([0-9]{6})\\/nickname\\/([0-9]{5})".r("userId", "nickname"))
+
+      documenter.swaggerDocs.swagger.models.keys.size shouldEqual 0
+      documenter.swaggerDocs.swagger.api.size shouldEqual 1
+
+      val api: Api = documenter.swaggerDocs.swagger.api.head
+      api.path shouldEqual "/users/123456/nickname/98765"
+      api.operations.size shouldEqual 1
+      api.operations.head.method shouldEqual "GET"
+      api.operations.head.parameters.size shouldEqual 2
+      api.operations.head.parameters.head.`type` shouldEqual "string"
+      api.operations.head.parameters.head.paramType shouldEqual "path"
+      api.operations.head.parameters.head.name shouldEqual "userId"
+      api.operations.head.parameters(1).`type` shouldEqual "string"
+      api.operations.head.parameters(1).paramType shouldEqual "path"
+      api.operations.head.parameters(1).name shouldEqual "nickname"
+    }
+
     "record response" in {
       val mockFile = mock[File]
       val documenter = Mockito.spy(new Documenter())

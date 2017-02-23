@@ -19,22 +19,46 @@ Add the dependency:
 Then write a test!
 
 ```
-class UserRoutesSpec extends WordSpec with ScalatestRouteTest with AkkaHttpRestDoc {
+
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.scalatest.{Matchers, WordSpec}
+import com.ksquared.swaggerdoc.akka.AkkaHttpDoc
+
+class RoutesSpec extends WordSpec with Matchers
+    with ScalatestRouteTest with AkkaHttpDoc {
 
     "the route" should {
-        "do some things" in {
+        "post some things" in {
             val body = SomeBody("123")
-            setupRequestWithBody(Post("/some/url", body)
+            setup(Post("/some/url", body)
                 .perform("some route") {
                   status shouldEqual OK
                   // rest of assertions
+                }
+        }
+        
+        "get some things" in {
+            setup(Get("/some/url/3456", ".*([0-9]*)".r("anId")
+                .perform("Get some item") {
+                    status shouldEqual OK
+                    // rest of assertions
                 }
         }
     }
 }
 ```
 
-Mixin the AkkaHttpRestDoc and use the performWithBody function for requests that have a body.
+Mixin the AkkaHttpDoc and use the setup function for requests.
+
+Urls with parameters in them:
+
+`setup(req: HttpRequest, pathRegex: Regex)`
+
+The regular expression should contain named groups to allow for
+clearer documentation. 
+
+`setup(Get("/some/url/123456/a/12345"), ".*([0-9]{6})\\/nickname\\/([0-9]{5})".r("userId", "nickname"))`
+
 
 ## Plugin Example
 

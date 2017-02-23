@@ -8,6 +8,7 @@ import org.apache.commons.io.FileUtils
 
 import scala.reflect.runtime.universe._
 import scala.collection.breakOut
+import scala.util.matching.Regex
 
 class Documenter extends Formatters {
   val swaggerDocs = new SwaggerDocs()
@@ -20,16 +21,17 @@ class Documenter extends Formatters {
   def documentRequest[T](req: HttpRequest, body: T) = {
     val model = createModel(body)
     val url = req.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
-    val parameter = Parameter(model.name)
+    val parameter = Parameter(model.name, "body", "body")
     val operation = Operation(req.method.value, Seq(parameter))
     val api = Api(url.path.toString(), Seq(operation))
     swaggerDocs.addApi(api)
     swaggerDocs.addModel(model)
   }
 
-  def documentRequest(req: HttpRequest) = {
+  def documentRequest(req: HttpRequest, pathRegEx: Regex) = {
     val url = req.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
-    val operation = Operation(req.method.value, Seq())
+    val parameters = getUrlParameters(url, pathRegEx)
+    val operation = Operation(req.method.value, parameters)
     val api = Api(url.path.toString(), Seq(operation))
     swaggerDocs.addApi(api)
   }
@@ -68,5 +70,14 @@ class Documenter extends Formatters {
       case x if x <:< ListType => Property("array")
       case _ => Property("")
     }
+  }
+
+  private def getUrlParameters(url: Uri, pathRegEx: Regex) = {
+    pathRegEx.findAllMatchIn(url.path.toString())
+      .toArray.flatMap { m =>
+        m.groupNames.map { name =>
+          Parameter("string", "path", name)
+        }
+      }
   }
 }

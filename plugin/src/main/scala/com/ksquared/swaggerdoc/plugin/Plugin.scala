@@ -14,7 +14,7 @@ object Plugin extends sbt.AutoPlugin {
 
   def swaggerDocGenerator() = {
     implicit val propertyFormatter = jsonFormat1(Property)
-    implicit val parameterFormatter = jsonFormat1(Parameter)
+    implicit val parameterFormatter = jsonFormat3(Parameter)
     implicit val operationFormatter = jsonFormat2(Operation)
     implicit val modelFormatter = jsonFormat2(Model)
     implicit val apiFormatter = jsonFormat2(Api)
