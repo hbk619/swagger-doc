@@ -10,15 +10,25 @@ case class Operation(method: String, parameters: Seq[Parameter])
 
 case class Api(path: String, operations: Seq[Operation])
 
-case class Swagger(api: List[Api], models: Map[String, Model])
+case class Swagger(apis: List[Api],
+                   models: Map[String, Model],
+                   apiVersion: String,
+                   basePath: Option[String],
+                   produces: Option[List[String]],
+                   resourcePath: Option[String])
 
-class SwaggerDocs {
-  var swagger = Swagger(List(), Map())
+class SwaggerDocs(apiVersion: String,
+                  resourcePath: Option[String] = None,
+                  produces: Option[List[String]] = None) {
+
+  var swagger = Swagger(List(), Map(),
+    apiVersion, Some("/"),
+    produces, resourcePath)
 
   def addApi(api: Api) = {
-    if (!swagger.api.contains(api)) {
-      val apis = api :: swagger.api
-      swagger = swagger.copy(api = apis)
+    if (!swagger.apis.contains(api)) {
+      val apis = api :: swagger.apis
+      swagger = swagger.copy(apis = apis)
     }
   }
 

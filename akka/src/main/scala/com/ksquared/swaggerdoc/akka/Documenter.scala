@@ -11,7 +11,7 @@ import scala.collection.breakOut
 import scala.util.matching.Regex
 
 class Documenter extends Formatters {
-  val swaggerDocs = new SwaggerDocs()
+  val swaggerDocs = new SwaggerDocs("0.0.1", Some("/"), Some(List("application/json")))
   val dir = new File("restdoc/generated")
   val StringType = typeOf[String]
   val IntType = typeOf[Int]

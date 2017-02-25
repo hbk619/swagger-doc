@@ -18,10 +18,10 @@ object Plugin extends sbt.AutoPlugin {
     implicit val operationFormatter = jsonFormat2(Operation)
     implicit val modelFormatter = jsonFormat2(Model)
     implicit val apiFormatter = jsonFormat2(Api)
-    implicit val swaggerFormatter = jsonFormat2(Swagger)
+    implicit val swaggerFormatter = jsonFormat6(Swagger)
     val dir = new File(System.getProperty("user.dir") + "/restdoc/generated")
 
-    var swaggerDocs = new SwaggerDocs()
+    var swaggerDocs = new SwaggerDocs("0.0.1", Some("/"), Some(List("application/json")))
 
     FileUtils.listFiles(new File(System.getProperty("user.dir") + "/restdoc/generated"), List("json").toArray, true)
       .iterator().asScala.toStream.foreach(file => {
@@ -29,7 +29,7 @@ object Plugin extends sbt.AutoPlugin {
 
       val swagger: Swagger = swaggerFormatter.read(lines.parseJson)
 
-      swagger.api.foreach(swaggerDocs.addApi(_))
+      swagger.apis.foreach(swaggerDocs.addApi(_))
       swagger.models.foreach(m => {
         swaggerDocs.addModel(m._2)
       })

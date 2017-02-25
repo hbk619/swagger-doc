@@ -28,7 +28,7 @@ class DocumenterSpec extends WordSpec with Matchers
       documenter.documentRequest(req, body)
 
       documenter.swaggerDocs.swagger.models.keys.size shouldEqual 1
-      documenter.swaggerDocs.swagger.api.size shouldEqual 1
+      documenter.swaggerDocs.swagger.apis.size shouldEqual 1
       val model: Option[Model] = documenter.swaggerDocs.swagger.models.get("TestClass")
       model.isDefined shouldBe true
       model.get.properties.keys.size shouldEqual 4
@@ -37,7 +37,7 @@ class DocumenterSpec extends WordSpec with Matchers
       model.get.properties.get("isTrue").get.`type` shouldBe "boolean"
       model.get.properties.get("someList").get.`type` shouldBe "array"
 
-      val api: Api = documenter.swaggerDocs.swagger.api.head
+      val api: Api = documenter.swaggerDocs.swagger.apis.head
       api.path shouldEqual "/test"
       api.operations.size shouldEqual 1
       api.operations.head.method shouldEqual "POST"
@@ -52,9 +52,9 @@ class DocumenterSpec extends WordSpec with Matchers
       documenter.documentRequest(req, ".*([0-9]{6})\\/nickname\\/([0-9]{5})".r("userId", "nickname"))
 
       documenter.swaggerDocs.swagger.models.keys.size shouldEqual 0
-      documenter.swaggerDocs.swagger.api.size shouldEqual 1
+      documenter.swaggerDocs.swagger.apis.size shouldEqual 1
 
-      val api: Api = documenter.swaggerDocs.swagger.api.head
+      val api: Api = documenter.swaggerDocs.swagger.apis.head
       api.path shouldEqual "/users/123456/nickname/98765"
       api.operations.size shouldEqual 1
       api.operations.head.method shouldEqual "GET"
