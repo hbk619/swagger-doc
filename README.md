@@ -1,6 +1,13 @@
 Swagger Doc
 ========
 
+## WORK IN PROGRESS
+
+It's all very hard coded and not well named as this is draft 1
+and I'm learning SBT/Scala as I go.
+
+## Intro
+
 This project allows you to generate swagger json from Akka Http tests.
 It's inspired by https://github.com/kodemaniak/akka-http-restdoc which creates
 some generic documentation from your tests.
@@ -67,6 +74,16 @@ In `plugins.sbt`
 `addSbtPlugin("com.ksquared" % "swagger-doc-generator" % "0.1")`
 
 The `swagger-doc` command will automatically become available.
+
+## TODO
+
+* Fix name of plugin to match sbt convention
+* Actually test it against the Swagger UI...
+* Write instructions on how to integrate with the Swagger UI
+* Write more tests
+* Make more configurable (where to write/read files etc)
+* Work out how to group routes
+* Figure out a friendlier way to do GET/DELETE requests
 
 ### Building the project
 
