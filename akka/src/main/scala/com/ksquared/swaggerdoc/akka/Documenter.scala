@@ -14,9 +14,13 @@ class Documenter extends Formatters {
   val swaggerDocs = new SwaggerDocs("0.0.1", Some("/"), Some(List("application/json")))
   val dir = new File("restdoc/generated")
   val StringType = typeOf[String]
+  val StringOptionType = typeOf[Option[String]]
   val IntType = typeOf[Int]
+  val IntOptionType = typeOf[Option[Int]]
   val BooleanType = typeOf[Boolean]
+  val BooleanOptionType = typeOf[Option[Boolean]]
   val ListType = typeOf[List[_]]
+  val ListOptionType = typeOf[Option[List[_]]]
 
   def documentRequest[T](req: HttpRequest, body: T) = {
     val model = createModel(body)
@@ -64,10 +68,10 @@ class Documenter extends Formatters {
 
   private def createProperty(propertyMethodSymbol: MethodSymbol): Property = {
     propertyMethodSymbol.returnType match {
-      case StringType => Property("string")
-      case IntType => Property("integer")
-      case BooleanType => Property("boolean")
-      case x if x <:< ListType => Property("array")
+      case StringType | StringOptionType => Property("string")
+      case IntType | IntOptionType => Property("integer")
+      case BooleanType | BooleanOptionType => Property("boolean")
+      case x if x <:< ListType | x <:< ListOptionType => Property("array")
       case _ => Property("")
     }
   }

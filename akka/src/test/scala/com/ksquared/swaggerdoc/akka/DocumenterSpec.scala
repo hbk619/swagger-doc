@@ -16,7 +16,9 @@ class DocumenterSpec extends WordSpec with Matchers
   with DefaultJsonProtocol with MockitoSugar {
 
   case class TestClass(id: String, value: Int, isTrue: Boolean, someList: List[String])
+  case class TestOptionalClass(id: Option[String], value: Option[Int], isTrue: Option[Boolean], someList: Option[List[String]])
   implicit val testClassFormatter = jsonFormat4(TestClass)
+  implicit val testOptionalClassFormatter = jsonFormat4(TestOptionalClass)
 
   "Documenter" should {
 
@@ -43,6 +45,31 @@ class DocumenterSpec extends WordSpec with Matchers
       api.operations.head.method shouldEqual "POST"
       api.operations.head.parameters.size shouldEqual 1
       api.operations.head.parameters.head.`type` shouldEqual "TestClass"
+    }
+
+    "record optional types request" in {
+      val documenter = new Documenter()
+      val body = TestOptionalClass(Some("123"), Some(21), Some(false), Some(List("bob")))
+      val req = Post("/test", body)
+
+      documenter.documentRequest(req, body)
+
+      documenter.swaggerDocs.swagger.models.keys.size shouldEqual 1
+      documenter.swaggerDocs.swagger.apis.size shouldEqual 1
+      val model: Option[Model] = documenter.swaggerDocs.swagger.models.get("TestOptionalClass")
+      model.isDefined shouldBe true
+      model.get.properties.keys.size shouldEqual 4
+      model.get.properties.get("id").get.`type` shouldBe "string"
+      model.get.properties.get("value").get.`type` shouldBe "integer"
+      model.get.properties.get("isTrue").get.`type` shouldBe "boolean"
+      model.get.properties.get("someList").get.`type` shouldBe "array"
+
+      val api: Api = documenter.swaggerDocs.swagger.apis.head
+      api.path shouldEqual "/test"
+      api.operations.size shouldEqual 1
+      api.operations.head.method shouldEqual "POST"
+      api.operations.head.parameters.size shouldEqual 1
+      api.operations.head.parameters.head.`type` shouldEqual "TestOptionalClass"
     }
 
     "record path regex request" in {
