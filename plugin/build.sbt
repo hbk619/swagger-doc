@@ -1,3 +1,3 @@
 sbtPlugin := true
 
-name := SwaggerDocBuild.NamePrefix + "-generator"
+name := "sbt-" + SwaggerDocBuild.NamePrefix + "-generator"

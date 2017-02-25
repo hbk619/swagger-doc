@@ -77,7 +77,6 @@ The `swagger-doc` command will automatically become available.
 
 ## TODO
 
-* Fix name of plugin to match sbt convention
 * Actually test it against the Swagger UI...
 * Write instructions on how to integrate with the Swagger UI
 * Write more tests
