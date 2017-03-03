@@ -75,9 +75,20 @@ In `plugins.sbt`
 
 The `swagger-doc` command will automatically become available.
 
+## Integrate with Swagger UI
+
+In index.html of [Swagger UI](https://github.com/swagger-api/swagger-ui)
+modify the creation of the SwaggerUI config and set the url to wherever
+you want to serve the swagger.json from.
+
+`
+window.swaggerUi = new SwaggerUi({
+        url: '/swagger.json',
+        dom_id: "swagger-ui-container"
+})`
+
 ## TODO
 
-* Write instructions on how to integrate with the Swagger UI
 * Write more tests
 * Work out how to group routes
 * Figure out a friendlier way to do GET/DELETE requests
