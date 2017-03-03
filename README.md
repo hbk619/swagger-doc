@@ -77,10 +77,8 @@ The `swagger-doc` command will automatically become available.
 
 ## TODO
 
-* Actually test it against the Swagger UI...
 * Write instructions on how to integrate with the Swagger UI
 * Write more tests
-* Make more configurable (where to write/read files etc)
 * Work out how to group routes
 * Figure out a friendlier way to do GET/DELETE requests
 
