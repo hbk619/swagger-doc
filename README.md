@@ -4,7 +4,7 @@ Swagger Doc
 ## WORK IN PROGRESS
 
 It's all very hard coded and not well named as this is draft 1
-and I'm learning SBT/Scala as I go.
+and I'm learning SBT/Scala as I go. Also it works with Swagger 1.0
 
 ## Intro
 
@@ -64,7 +64,7 @@ Urls with parameters in them:
 The regular expression should contain named groups to allow for
 clearer documentation. 
 
-`setup(Get("/some/url/123456/a/12345"), ".*([0-9]{6})\\/nickname\\/([0-9]{5})".r("userId", "nickname"))`
+`setup(Get("/some/url/123456/nickname/12345"), ".*([0-9]{6})\\/nickname\\/([0-9]{5})".r("userId", "nickname"))`
 
 
 ## Plugin Example
