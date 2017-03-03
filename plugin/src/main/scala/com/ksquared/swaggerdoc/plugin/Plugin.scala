@@ -13,9 +13,17 @@ import spray.json._
 import scala.collection.JavaConverters._
 
 object Plugin extends sbt.AutoPlugin {
+  implicit val propertyFormatter = jsonFormat1(Property)
+  implicit val parameterFormatter = jsonFormat3(Parameter)
+  implicit val operationFormatter = jsonFormat2(Operation)
+  implicit val modelFormatter = jsonFormat2(Model)
+  implicit val apiFormatter = jsonFormat2(Api)
+  implicit val swaggerFormatter = jsonFormat6(Swagger)
 
   val defaultInputLocation: String = System.getProperty("user.dir") + "/restdoc/generated"
   val defaultOutputLocation: String = System.getProperty("user.dir") + "/restdoc/generated"
+
+  override def trigger = allRequirements
 
   object autoImport {
     lazy val swaggerDocTask = TaskKey[Unit]("swagger-doc", "Creates swagger docs json")
@@ -25,12 +33,6 @@ object Plugin extends sbt.AutoPlugin {
   import autoImport._
 
   def swaggerDocGenerator = Def.task {
-    implicit val propertyFormatter = jsonFormat1(Property)
-    implicit val parameterFormatter = jsonFormat3(Parameter)
-    implicit val operationFormatter = jsonFormat2(Operation)
-    implicit val modelFormatter = jsonFormat2(Model)
-    implicit val apiFormatter = jsonFormat2(Api)
-    implicit val swaggerFormatter = jsonFormat6(Swagger)
     val config: Map[String, String] = swaggerDocConfig.value
     val location = config.getOrElse("output", Plugin.defaultOutputLocation)
     val outputFile = new File(location)
@@ -58,8 +60,6 @@ object Plugin extends sbt.AutoPlugin {
     generatedDoc
   }
 
-  override def trigger = allRequirements
-
   override lazy val projectSettings = Seq(
     swaggerDocConfig := Map(
       "title" -> "Documentation for an api",
@@ -70,5 +70,4 @@ object Plugin extends sbt.AutoPlugin {
     ),
     swaggerDocTask := swaggerDocGenerator.value
   )
-
 }
