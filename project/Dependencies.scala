@@ -22,7 +22,7 @@ object Dependencies {
   )
 
   val testing: Seq[ModuleID] = Seq(
-    "org.scalatest" % "scalatest_2.11"  % "3.0.1"   % "test",
+    "org.scalatest" %% "scalatest"  % "3.0.1"   % "test",
     "org.mockito" % "mockito-all" % "1.10.19" % "test"
   )
   val akka = common ++ akkaDeps ++ scala ++ testing

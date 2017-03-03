@@ -1,0 +1,1 @@
+{"resourcePath":"/","apis":[{"path":"/pet/someSpecialId","operations":[{"method":"PUT","parameters":[{"type":"PetRequest","paramType":"body","name":"body"}]}]}],"basePath":"/","produces":["application/json"],"models":{"PetRequest":{"name":"PetRequest","properties":{"name":{"type":"string"}}}},"apiVersion":"0.0.1"}

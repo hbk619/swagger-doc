@@ -6,7 +6,7 @@ lazy val models = project
 lazy val plugin = project
     .dependsOn(models)
     .settings(Common.settings: _*)
-    .settings(libraryDependencies ++= Dependencies.common)
+    .settings(libraryDependencies ++= Dependencies.common ++ Dependencies.testing  )
 
 lazy val akka = project
     .dependsOn(models)
