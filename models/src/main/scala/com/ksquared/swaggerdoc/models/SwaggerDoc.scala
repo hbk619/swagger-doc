@@ -2,40 +2,58 @@ package com.ksquared.swaggerdoc.models
 
 case class Property(`type`: String)
 
-case class Parameter(`type`: String, paramType: String, name: String)
+case class Schema($ref: String)
 
-case class Model(name: String, properties: Map[String, Property])
+case class Parameter(`in`: String, name: String, schema: Option[Schema], `type`: Option[String])
 
-case class Operation(method: String, parameters: Seq[Parameter])
+case class Definition(`type`: String, properties: Map[String, Property])
 
-case class Api(path: String, operations: Seq[Operation])
+case class Response(description: String)
 
-case class Swagger(apis: List[Api],
-                   models: Map[String, Model],
-                   apiVersion: String,
+case class Operation(consumes: Seq[String], produces: Seq[String],
+                     parameters: Seq[Parameter],
+                     responses: Map[String, Response])
+
+case class Info(title: String, version: String)
+
+case class Swagger(definitions: Map[String, Definition],
+                   paths: Map[String, Map[String, Operation]],
                    basePath: Option[String],
-                   produces: Option[List[String]],
-                   resourcePath: Option[String])
+                   info: Info = Info("An app", "0.0.1"),
+                   swagger: String = "2.0")
 
 class SwaggerDocs(apiVersion: String,
-                  resourcePath: Option[String] = None,
-                  produces: Option[List[String]] = None) {
+                  basePath: Option[String] = None) {
 
-  var swagger = Swagger(List(), Map(),
-    apiVersion, Some("/"),
-    produces, resourcePath)
+  var swagger = Swagger(Map(), Map(),
+    basePath, Info("Test", apiVersion))
 
-  def addApi(api: Api) = {
-    if (!swagger.apis.contains(api)) {
-      val apis = api :: swagger.apis
-      swagger = swagger.copy(apis = apis)
+  def addOperation(url: String, method: String, operation: Operation) = {
+    if (!swagger.paths.contains(url)) {
+      val paths = swagger.paths + (url -> Map(method -> operation))
+      swagger = swagger.copy(paths = paths)
+    } else {
+      val operations = swagger.paths(url) + (method -> operation)
+      val paths = swagger.paths + (url -> operations)
+      swagger = swagger.copy(paths = paths)
     }
   }
 
-  def addModel(model: Model): Unit = {
-    if (swagger.models.get(model.name).isEmpty) {
-      val models = swagger.models + (model.name -> model)
-      swagger = swagger.copy(models = models)
-    }
+  def addDefinition(name: String, model: Definition): Unit = {
+    val definitions = swagger.definitions + (name -> model)
+    swagger = swagger.copy(definitions = definitions)
+  }
+
+  def addPaths(paths: Map[String, Map[String, Operation]]) = {
+    for {
+      (url, operations) <- paths
+      (method, operation) <- operations
+    } yield addOperation(url, method, operation)
+  }
+
+  def addDefinitions(definitions: Map[String, Definition]) = {
+    for {
+      (defName, definition) <- definitions
+    } yield addDefinition(defName, definition)
   }
 }

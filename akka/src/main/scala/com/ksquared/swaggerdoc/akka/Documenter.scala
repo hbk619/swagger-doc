@@ -11,7 +11,7 @@ import scala.collection.breakOut
 import scala.util.matching.Regex
 
 class Documenter extends Formatters {
-  val swaggerDocs = new SwaggerDocs("0.0.1", Some("/"), Some(List("application/json")))
+  val swaggerDocs = new SwaggerDocs("0.0.1", Some("/"))
   val dir = new File("restdoc/generated")
   val StringType = typeOf[String]
   val StringOptionType = typeOf[Option[String]]
@@ -23,21 +23,20 @@ class Documenter extends Formatters {
   val ListOptionType = typeOf[Option[List[_]]]
 
   def documentRequest[T](req: HttpRequest, body: T) = {
-    val model = createModel(body)
+    val definition = createDefinition(body)
+    val definitionName = body.getClass.getSimpleName
     val url = req.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
-    val parameter = Parameter(model.name, "body", "body")
-    val operation = Operation(req.method.value, Seq(parameter))
-    val api = Api(url.path.toString(), Seq(operation))
-    swaggerDocs.addApi(api)
-    swaggerDocs.addModel(model)
+    val parameter = Parameter("body", definitionName, Some(Schema(s"#/definitions/$definitionName")), None)
+    val operation = Operation(List("application/json"), List("application/json"), Seq(parameter), Map())
+    swaggerDocs.addOperation(url.path.toString(), req.method.value.toLowerCase(), operation)
+    swaggerDocs.addDefinition(definitionName, definition)
   }
 
   def documentRequest(req: HttpRequest, pathRegEx: Regex) = {
     val url = req.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
     val parameters = getUrlParameters(url, pathRegEx)
-    val operation = Operation(req.method.value, parameters)
-    val api = Api(url.path.toString(), Seq(operation))
-    swaggerDocs.addApi(api)
+    val operation = Operation(List("application/json"), List("application/json"), parameters, Map())
+    swaggerDocs.addOperation(url.path.toString(), req.method.value.toLowerCase, operation)
   }
 
   def saveResponse(name: String) = {
@@ -54,7 +53,7 @@ class Documenter extends Formatters {
     FileUtils.write(file, swaggerFormatter.write(swaggerDocs.swagger).toString(), "UTF-8")
   }
 
-  private def createModel[T](body: T): Model = {
+  private def createDefinition[T](body: T): Definition = {
     val rm = scala.reflect.runtime.currentMirror
     val accessors = rm.classSymbol(body.getClass).toType.members.collect {
       case m: MethodSymbol if m.isGetter && m.isPublic => m
@@ -63,7 +62,7 @@ class Documenter extends Formatters {
       (m.name.toString, createProperty(m))
     })(breakOut)
 
-    Model(body.getClass.getSimpleName, properties)
+    Definition("object", properties)
   }
 
   private def createProperty(propertyMethodSymbol: MethodSymbol): Property = {
@@ -80,7 +79,7 @@ class Documenter extends Formatters {
     pathRegEx.findAllMatchIn(url.path.toString())
       .toArray.flatMap { m =>
         m.groupNames.map { name =>
-          Parameter("string", "path", name)
+          Parameter("path", name, None, Some("string"))
         }
       }
   }

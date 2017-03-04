@@ -11,15 +11,17 @@ import spray.json.DefaultJsonProtocol._
 import scala.collection.JavaConverters._
 
 trait DocGenerator {
+  implicit val schemaFormatter = jsonFormat1(Schema)
   implicit val propertyFormatter = jsonFormat1(Property)
-  implicit val parameterFormatter = jsonFormat3(Parameter)
-  implicit val operationFormatter = jsonFormat2(Operation)
-  implicit val modelFormatter = jsonFormat2(Model)
-  implicit val apiFormatter = jsonFormat2(Api)
-  implicit val swaggerFormatter = jsonFormat6(Swagger)
+  implicit val parameterFormatter = jsonFormat4(Parameter)
+  implicit val definitionFormatter = jsonFormat2(Definition)
+  implicit val responseFormatter = jsonFormat1(Response)
+  implicit val operationFormatter = jsonFormat4(Operation)
+  implicit val infoFormatter = jsonFormat2(Info)
+  implicit val swaggerFormatter = jsonFormat5(Swagger)
 
   def generateDoc(docsLocation: File, apiVersion: String, baseUrl: String) = {
-    val swaggerDocs = new SwaggerDocs(apiVersion, Some(baseUrl), Some(List("application/json")))
+    val swaggerDocs = new SwaggerDocs(apiVersion, Some(baseUrl))
 
     val files: util.Collection[File] = getFiles(docsLocation, "json")
 
@@ -28,10 +30,8 @@ trait DocGenerator {
 
       val swagger: Swagger = swaggerFormatter.read(lines.parseJson)
 
-      swagger.apis.foreach(swaggerDocs.addApi)
-      swagger.models.foreach(m => {
-        swaggerDocs.addModel(m._2)
-      })
+      swaggerDocs.addPaths(swagger.paths)
+      swaggerDocs.addDefinitions(swagger.definitions)
     })
 
     swaggerFormatter.write(swaggerDocs.swagger).toString()

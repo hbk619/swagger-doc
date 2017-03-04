@@ -4,7 +4,7 @@ import java.io.File
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.ksquared.swaggerdoc.models.{Api, Model}
+import com.ksquared.swaggerdoc.models._
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
@@ -29,22 +29,22 @@ class DocumenterSpec extends WordSpec with Matchers
 
       documenter.documentRequest(req, body)
 
-      documenter.swaggerDocs.swagger.models.keys.size shouldEqual 1
-      documenter.swaggerDocs.swagger.apis.size shouldEqual 1
-      val model: Option[Model] = documenter.swaggerDocs.swagger.models.get("TestClass")
+      documenter.swaggerDocs.swagger.definitions.keys.size shouldEqual 1
+      documenter.swaggerDocs.swagger.paths.size shouldEqual 1
+      val model: Option[Definition] = documenter.swaggerDocs.swagger.definitions.get("TestClass")
       model.isDefined shouldBe true
       model.get.properties.keys.size shouldEqual 4
-      model.get.properties.get("id").get.`type` shouldBe "string"
-      model.get.properties.get("value").get.`type` shouldBe "integer"
-      model.get.properties.get("isTrue").get.`type` shouldBe "boolean"
-      model.get.properties.get("someList").get.`type` shouldBe "array"
+      model.get.properties("id").`type` shouldBe "string"
+      model.get.properties("value").`type` shouldBe "integer"
+      model.get.properties("isTrue").`type` shouldBe "boolean"
+      model.get.properties("someList").`type` shouldBe "array"
 
-      val api: Api = documenter.swaggerDocs.swagger.apis.head
-      api.path shouldEqual "/test"
-      api.operations.size shouldEqual 1
-      api.operations.head.method shouldEqual "POST"
-      api.operations.head.parameters.size shouldEqual 1
-      api.operations.head.parameters.head.`type` shouldEqual "TestClass"
+      val operations: Map[String, Operation] = documenter.swaggerDocs.swagger.paths("/test")
+      operations.size shouldEqual 1
+      operations.get("post").isDefined shouldEqual true
+      operations("post").parameters.size shouldEqual 1
+      operations("post").parameters.head.`in` shouldEqual "body"
+      operations("post").parameters.head.schema.get.$ref shouldEqual "#/definitions/TestClass"
     }
 
     "record optional types request" in {
@@ -54,22 +54,20 @@ class DocumenterSpec extends WordSpec with Matchers
 
       documenter.documentRequest(req, body)
 
-      documenter.swaggerDocs.swagger.models.keys.size shouldEqual 1
-      documenter.swaggerDocs.swagger.apis.size shouldEqual 1
-      val model: Option[Model] = documenter.swaggerDocs.swagger.models.get("TestOptionalClass")
+      documenter.swaggerDocs.swagger.definitions.keys.size shouldEqual 1
+      documenter.swaggerDocs.swagger.paths.keys.size shouldEqual 1
+      val model: Option[Definition] = documenter.swaggerDocs.swagger.definitions.get("TestOptionalClass")
       model.isDefined shouldBe true
       model.get.properties.keys.size shouldEqual 4
-      model.get.properties.get("id").get.`type` shouldBe "string"
-      model.get.properties.get("value").get.`type` shouldBe "integer"
-      model.get.properties.get("isTrue").get.`type` shouldBe "boolean"
-      model.get.properties.get("someList").get.`type` shouldBe "array"
+      model.get.properties("id").`type` shouldBe "string"
+      model.get.properties("value").`type` shouldBe "integer"
+      model.get.properties("isTrue").`type` shouldBe "boolean"
+      model.get.properties("someList").`type` shouldBe "array"
 
-      val api: Api = documenter.swaggerDocs.swagger.apis.head
-      api.path shouldEqual "/test"
-      api.operations.size shouldEqual 1
-      api.operations.head.method shouldEqual "POST"
-      api.operations.head.parameters.size shouldEqual 1
-      api.operations.head.parameters.head.`type` shouldEqual "TestOptionalClass"
+      val operations: Map[String, Operation] = documenter.swaggerDocs.swagger.paths("/test")
+      operations.get("post").isDefined shouldEqual true
+      operations("post").parameters.size shouldEqual 1
+      operations("post").parameters.head.schema.get.$ref shouldEqual "#/definitions/TestOptionalClass"
     }
 
     "record path regex request" in {
@@ -78,20 +76,17 @@ class DocumenterSpec extends WordSpec with Matchers
 
       documenter.documentRequest(req, ".*([0-9]{6})\\/nickname\\/([0-9]{5})".r("userId", "nickname"))
 
-      documenter.swaggerDocs.swagger.models.keys.size shouldEqual 0
-      documenter.swaggerDocs.swagger.apis.size shouldEqual 1
+      documenter.swaggerDocs.swagger.definitions.keys.size shouldEqual 0
+      documenter.swaggerDocs.swagger.paths.keys.size shouldEqual 1
 
-      val api: Api = documenter.swaggerDocs.swagger.apis.head
-      api.path shouldEqual "/users/123456/nickname/98765"
-      api.operations.size shouldEqual 1
-      api.operations.head.method shouldEqual "GET"
-      api.operations.head.parameters.size shouldEqual 2
-      api.operations.head.parameters.head.`type` shouldEqual "string"
-      api.operations.head.parameters.head.paramType shouldEqual "path"
-      api.operations.head.parameters.head.name shouldEqual "userId"
-      api.operations.head.parameters(1).`type` shouldEqual "string"
-      api.operations.head.parameters(1).paramType shouldEqual "path"
-      api.operations.head.parameters(1).name shouldEqual "nickname"
+      val operations: Map[String, Operation] = documenter.swaggerDocs.swagger.paths("/users/123456/nickname/98765")
+      operations("get").parameters.size shouldEqual 2
+      operations("get").parameters.head.`type`.get shouldEqual "string"
+      operations("get").parameters.head.`in` shouldEqual "path"
+      operations("get").parameters.head.name shouldEqual "userId"
+      operations("get").parameters(1).`type`.get shouldEqual "string"
+      operations("get").parameters(1).`in` shouldEqual "path"
+      operations("get").parameters(1).name shouldEqual "nickname"
     }
 
     "record response" in {

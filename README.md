@@ -4,7 +4,7 @@ Swagger Doc
 ## WORK IN PROGRESS
 
 It's all very hard coded and not well named as this is draft 1
-and I'm learning SBT/Scala as I go. Also it works with Swagger 1.0
+and I'm learning SBT/Scala as I go. It generates Swagger 2.0 JSON.
 
 ## Intro
 
@@ -89,6 +89,7 @@ window.swaggerUi = new SwaggerUi({
 
 ## TODO
 
+* Work out why akka tests fail in the command line and not IntelliJ
 * Write more tests
 * Work out how to group routes
 * Figure out a friendlier way to do GET/DELETE requests

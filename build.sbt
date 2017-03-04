@@ -2,6 +2,7 @@ name := "swagger-doc"
 
 lazy val models = project
     .settings(Common.settings: _*)
+    .settings(libraryDependencies ++= Dependencies.testing)
 
 lazy val plugin = project
     .dependsOn(models)
