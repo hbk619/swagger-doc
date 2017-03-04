@@ -31,13 +31,12 @@ class DocumenterSpec extends WordSpec with Matchers
 
       documenter.swaggerDocs.swagger.definitions.keys.size shouldEqual 1
       documenter.swaggerDocs.swagger.paths.size shouldEqual 1
-      val model: Option[Definition] = documenter.swaggerDocs.swagger.definitions.get("TestClass")
-      model.isDefined shouldBe true
-      model.get.properties.keys.size shouldEqual 4
-      model.get.properties("id").`type` shouldBe "string"
-      model.get.properties("value").`type` shouldBe "integer"
-      model.get.properties("isTrue").`type` shouldBe "boolean"
-      model.get.properties("someList").`type` shouldBe "array"
+      val model: Definition = documenter.swaggerDocs.swagger.definitions("TestClass")
+      model.properties.keys.size shouldEqual 4
+      model.properties("id").`type` shouldBe "string"
+      model.properties("value").`type` shouldBe "integer"
+      model.properties("isTrue").`type` shouldBe "boolean"
+      model.properties("someList").`type` shouldBe "array"
 
       val operations: Map[String, Operation] = documenter.swaggerDocs.swagger.paths("/test")
       operations.size shouldEqual 1

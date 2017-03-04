@@ -68,8 +68,8 @@ class Documenter extends Formatters {
   private def createProperty(propertyMethodSymbol: MethodSymbol): Property = {
     propertyMethodSymbol.returnType match {
       case StringType | StringOptionType => Property("string")
-      case IntType | IntOptionType => Property("integer")
-      case BooleanType | BooleanOptionType => Property("boolean")
+      case x if x <:< IntType | x <:< IntOptionType => Property("integer")
+      case x if x <:< BooleanType | x <:< BooleanOptionType => Property("boolean")
       case x if x <:< ListType | x <:< ListOptionType => Property("array")
       case _ => Property("")
     }

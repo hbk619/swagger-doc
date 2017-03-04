@@ -89,9 +89,8 @@ window.swaggerUi = new SwaggerUi({
 
 ## TODO
 
-* Work out why akka tests fail in the command line and not IntelliJ
-* Write more tests
-* Work out how to group routes
+* Document response codes
+* Work out how to group routes (tags)
 * Figure out a friendlier way to do GET/DELETE requests
 
 ### Building the project
