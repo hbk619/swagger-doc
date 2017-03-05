@@ -2,7 +2,7 @@ package com.ksquared.swaggerdoc.akka
 
 import java.io.File
 
-import akka.http.scaladsl.model.{HttpRequest, Uri}
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import com.ksquared.swaggerdoc.models._
 import org.apache.commons.io.FileUtils
 
@@ -39,7 +39,13 @@ class Documenter extends Formatters {
     swaggerDocs.addOperation(url.path.toString(), req.method.value.toLowerCase, operation)
   }
 
-  def saveResponse(name: String) = {
+  def saveResponse(name: String, request: HttpRequest, response: HttpResponse) = {
+    val url = request.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
+    val method = request.method.value.toLowerCase
+    val path = url.path.toString()
+
+    val responseObj = Response(response.status.reason())
+    swaggerDocs.addResponse(path, method, response.status.intValue(), responseObj)
     writeToFile(createFile(name))
   }
 

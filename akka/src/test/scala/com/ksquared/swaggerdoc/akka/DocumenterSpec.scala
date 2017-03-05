@@ -3,6 +3,7 @@ package com.ksquared.swaggerdoc.akka
 import java.io.File
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.model.{HttpEntity, HttpProtocols, HttpResponse, StatusCode}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.ksquared.swaggerdoc.models._
 import org.mockito.Mockito
@@ -91,13 +92,24 @@ class DocumenterSpec extends WordSpec with Matchers
     "record response" in {
       val mockFile = mock[File]
       val documenter = Mockito.spy(new Documenter())
+      val req = Get("/users")
+      val responseEntity = HttpEntity("{}")
+      val response = new HttpResponse(StatusCode.int2StatusCode(200), List(), responseEntity, HttpProtocols.`HTTP/1.0`)
+      val expectedResponse = Response("OK")
+      val getOperation = Operation(List("json"), List("json"), List(), Map())
+      val swagger = Swagger(Map(), Map("/users" -> Map("get" -> getOperation)),
+        Some(""), Info("Test", ""))
+      documenter.swaggerDocs.swagger = swagger
       Mockito.doReturn(mockFile).when(documenter).createFile("test")
       Mockito.doNothing().when(documenter).writeToFile(mockFile)
 
-      documenter.saveResponse("test")
+      documenter.saveResponse("test", req, response)
 
       Mockito.verify(documenter).createFile("test")
       Mockito.verify(documenter).writeToFile(mockFile)
+
+      val operation: Operation = documenter.swaggerDocs.swagger.paths("/users")("get")
+      operation.responses("200") shouldEqual expectedResponse
     }
   }
 

@@ -56,4 +56,11 @@ class SwaggerDocs(apiVersion: String,
       (defName, definition) <- definitions
     } yield addDefinition(defName, definition)
   }
+
+  def addResponse(url: String, method: String, status: Int, response: Response) = {
+    val existingResponses = swagger.paths(url)(method).responses
+    val newResponses = existingResponses + (status.toString -> response)
+    val operation = swagger.paths(url)(method).copy(responses = newResponses)
+    addOperation(url, method, operation)
+  }
 }

@@ -27,7 +27,7 @@ trait AkkaHttpDoc extends Formatters {
 
     def perform[T](name: String)(body: => T): T = {
       req ~> Route.seal(route) ~> check {
-        documenter.saveResponse(name)
+        documenter.saveResponse(name, req, response)
         body
       }
     }

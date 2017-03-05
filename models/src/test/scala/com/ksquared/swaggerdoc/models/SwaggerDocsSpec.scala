@@ -109,5 +109,25 @@ class SwaggerDocsSpec extends WordSpec with Matchers {
         swaggerDoc.swagger.definitions("otherDef") shouldEqual definition2
       }
     }
+
+    "addResponse" should {
+      "add response to existing operation" in {
+        val swaggerDoc = new SwaggerDocs("0.0.1", Some("/base"))
+        val operation = Operation(List("json"), List("json"), List(), Map())
+        val operation2 = Operation(List("json"), List("json"), List(Parameter("body", "test", None, Some("string"))), Map())
+        val operation3 = Operation(List("xml"), List("xml"), List(Parameter("body", "test", None, Some("string"))), Map())
+
+        val paths = Map("/test" -> Map("GET" -> operation, "POST" -> operation2), "/test2" -> Map("PUT" -> operation3))
+        val expectedOperation = Operation(List("json"), List("json"), List(), Map("400" -> Response("Bad request")))
+
+        swaggerDoc.swagger = swaggerDoc.swagger.copy(paths = paths)
+
+        swaggerDoc.addResponse("/test", "GET", 400, Response("Bad request"))
+
+        swaggerDoc.swagger.paths("/test")("GET") shouldEqual expectedOperation
+        swaggerDoc.swagger.paths("/test")("POST") shouldEqual operation2
+        swaggerDoc.swagger.paths("/test2")("PUT") shouldEqual operation3
+      }
+    }
   }
 }
