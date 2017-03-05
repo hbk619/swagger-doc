@@ -27,7 +27,7 @@ class Documenter extends Formatters {
     val definitionName = body.getClass.getSimpleName
     val url = req.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
     val parameter = Parameter("body", definitionName, Some(Schema(s"#/definitions/$definitionName")), None)
-    val operation = Operation(List("application/json"), List("application/json"), Seq(parameter), Map())
+    val operation = Operation(Set("application/json"), Set("application/json"), Set(parameter), Map())
     swaggerDocs.addOperation(url.path.toString(), req.method.value.toLowerCase(), operation)
     swaggerDocs.addDefinition(definitionName, definition)
   }
@@ -35,7 +35,7 @@ class Documenter extends Formatters {
   def documentRequest(req: HttpRequest, pathRegEx: Regex) = {
     val url = req.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
     val parameters = getUrlParameters(url, pathRegEx)
-    val operation = Operation(List("application/json"), List("application/json"), parameters, Map())
+    val operation = Operation(Set("application/json"), Set("application/json"), parameters, Map())
     swaggerDocs.addOperation(url.path.toString(), req.method.value.toLowerCase, operation)
   }
 
@@ -81,9 +81,9 @@ class Documenter extends Formatters {
     }
   }
 
-  private def getUrlParameters(url: Uri, pathRegEx: Regex) = {
+  private def getUrlParameters(url: Uri, pathRegEx: Regex): Set[Parameter] = {
     pathRegEx.findAllMatchIn(url.path.toString())
-      .toArray.flatMap { m =>
+      .toSet.flatMap { m: Regex.Match =>
         m.groupNames.map { name =>
           Parameter("path", name, None, Some("string"))
         }

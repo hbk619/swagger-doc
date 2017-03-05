@@ -8,7 +8,7 @@ class SwaggerDocsSpec extends WordSpec with Matchers {
     "addOperation" should {
       "add an operation if it does not exist" in {
         val swaggerDoc = new SwaggerDocs("0.0.1", Some("/base"))
-        val operation = Operation(List("json"), List("json"), List(), Map())
+        val operation = Operation(Set("json"), Set("json"), Set(), Map())
         swaggerDoc.addOperation("/test", "GET", operation)
 
         swaggerDoc.swagger.paths.get("/test").isDefined shouldBe true
@@ -18,8 +18,8 @@ class SwaggerDocsSpec extends WordSpec with Matchers {
 
       "update an operation if it exists" in {
         val swaggerDoc = new SwaggerDocs("0.0.1", Some("/base"))
-        val operation = Operation(List("json"), List("json"), List(), Map())
-        val operation2 = Operation(List("json"), List("json"), List(Parameter("body", "test", None, Some("string"))), Map())
+        val operation = Operation(Set("json"), Set("json"), Set(), Map())
+        val operation2 = Operation(Set("json"), Set("json"), Set(Parameter("body", "test", None, Some("string"))), Map())
         swaggerDoc.addOperation("/test", "GET", operation)
         swaggerDoc.addOperation("/test", "GET", operation2)
 
@@ -54,10 +54,10 @@ class SwaggerDocsSpec extends WordSpec with Matchers {
     }
 
     "addPath" should {
-      "add new elements" in {
+      "add new paths" in {
         val swaggerDoc = new SwaggerDocs("0.0.1", Some("/base"))
-        val operation = Operation(List("json"), List("json"), List(), Map())
-        val operation2 = Operation(List("json"), List("json"), List(Parameter("body", "test", None, Some("string"))), Map())
+        val operation = Operation(Set("json"), Set("json"), Set(), Map())
+        val operation2 = Operation(Set("json"), Set("json"), Set(Parameter("body", "test", None, Some("string"))), Map())
 
         val paths = Map("/test" -> Map("GET" -> operation, "POST" -> operation2))
 
@@ -66,15 +66,31 @@ class SwaggerDocsSpec extends WordSpec with Matchers {
         swaggerDoc.swagger.paths shouldEqual paths
       }
 
-      "update elements" in {
+      "update existing paths with new method" in {
         val swaggerDoc = new SwaggerDocs("0.0.1", Some("/base"))
-        val operation = Operation(List("json"), List("json"), List(), Map())
-        val operation2 = Operation(List("json"), List("json"), List(Parameter("body", "test", None, Some("string"))), Map())
-        val operation3 = Operation(List("xml"), List("xml"), List(Parameter("body", "test", None, Some("string"))), Map())
+        val operation = Operation(Set("json"), Set("json"), Set(), Map())
+        val operation2 = Operation(Set("json"), Set("json"), Set(Parameter("body", "test", None, Some("string"))), Map())
+        val operation3 = Operation(Set("xml"), Set("xml"), Set(Parameter("body", "test", None, Some("string"))), Map())
 
         val paths = Map("/test" -> Map("GET" -> operation, "POST" -> operation2))
         val paths1 = Map("/test" -> Map("PUT" -> operation3))
         val expectedPaths = Map("/test" -> Map("GET" -> operation, "POST" -> operation2, "PUT" -> operation3))
+
+        swaggerDoc.addPaths(paths)
+        swaggerDoc.addPaths(paths1)
+
+        swaggerDoc.swagger.paths shouldEqual expectedPaths
+      }
+
+      "update existing method with new data" in {
+        val swaggerDoc = new SwaggerDocs("0.0.1", Some("/base"))
+        val operation = Operation(Set("json"), Set("json"), Set(), Map())
+        val operation2 = Operation(Set("json"), Set("json"), Set(Parameter("body", "test", None, Some("string"))), Map("400" -> Response("Bad")))
+        val operation3 = Operation(Set("xml"), Set("xml"), Set(Parameter("body", "test", None, Some("string"))), Map("200" -> Response("OK")))
+        val expectedOperation = Operation(Set("json", "xml"), Set("json", "xml"), Set(Parameter("body", "test", None, Some("string"))), Map("200" -> Response("OK"), "400" -> Response("Bad")))
+        val paths = Map("/test" -> Map("GET" -> operation, "POST" -> operation2))
+        val paths1 = Map("/test" -> Map("POST" -> operation3))
+        val expectedPaths = Map("/test" -> Map("GET" -> operation, "POST" -> expectedOperation))
 
         swaggerDoc.addPaths(paths)
         swaggerDoc.addPaths(paths1)
@@ -113,12 +129,12 @@ class SwaggerDocsSpec extends WordSpec with Matchers {
     "addResponse" should {
       "add response to existing operation" in {
         val swaggerDoc = new SwaggerDocs("0.0.1", Some("/base"))
-        val operation = Operation(List("json"), List("json"), List(), Map())
-        val operation2 = Operation(List("json"), List("json"), List(Parameter("body", "test", None, Some("string"))), Map())
-        val operation3 = Operation(List("xml"), List("xml"), List(Parameter("body", "test", None, Some("string"))), Map())
+        val operation = Operation(Set("json"), Set("json"), Set(), Map())
+        val operation2 = Operation(Set("json"), Set("json"), Set(Parameter("body", "test", None, Some("string"))), Map())
+        val operation3 = Operation(Set("xml"), Set("xml"), Set(Parameter("body", "test", None, Some("string"))), Map())
 
         val paths = Map("/test" -> Map("GET" -> operation, "POST" -> operation2), "/test2" -> Map("PUT" -> operation3))
-        val expectedOperation = Operation(List("json"), List("json"), List(), Map("400" -> Response("Bad request")))
+        val expectedOperation = Operation(Set("json"), Set("json"), Set(), Map("400" -> Response("Bad request")))
 
         swaggerDoc.swagger = swaggerDoc.swagger.copy(paths = paths)
 

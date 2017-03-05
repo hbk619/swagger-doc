@@ -18,14 +18,14 @@ class DocumenterSpec extends WordSpec with Matchers
 
   case class TestClass(id: String, value: Int, isTrue: Boolean, someList: List[String])
   case class TestOptionalClass(id: Option[String], value: Option[Int], isTrue: Option[Boolean], someList: Option[List[String]])
-  implicit val testClassFormatter = jsonFormat4(TestClass)
-  implicit val testOptionalClassFormatter = jsonFormat4(TestOptionalClass)
+  implicit val testClassFormatter: RootJsonFormat[TestClass] = jsonFormat4(TestClass)
+  implicit val testOptionalClassFormatter: RootJsonFormat[TestOptionalClass] = jsonFormat4(TestOptionalClass)
 
   "Documenter" should {
 
     "record request" in {
       val documenter = new Documenter()
-      val body = TestClass("123", 21, false, List("bob"))
+      val body = TestClass("123", 21, isTrue = false, List("bob"))
       val req = Post("/test", body)
 
       documenter.documentRequest(req, body)
@@ -79,14 +79,10 @@ class DocumenterSpec extends WordSpec with Matchers
       documenter.swaggerDocs.swagger.definitions.keys.size shouldEqual 0
       documenter.swaggerDocs.swagger.paths.keys.size shouldEqual 1
 
+      val expectedParams = Set(Parameter("path", "userId", None, Some("string")), Parameter("path", "nickname", None, Some("string")))
       val operations: Map[String, Operation] = documenter.swaggerDocs.swagger.paths("/users/123456/nickname/98765")
-      operations("get").parameters.size shouldEqual 2
-      operations("get").parameters.head.`type`.get shouldEqual "string"
-      operations("get").parameters.head.`in` shouldEqual "path"
-      operations("get").parameters.head.name shouldEqual "userId"
-      operations("get").parameters(1).`type`.get shouldEqual "string"
-      operations("get").parameters(1).`in` shouldEqual "path"
-      operations("get").parameters(1).name shouldEqual "nickname"
+
+      operations("get").parameters shouldEqual expectedParams
     }
 
     "record response" in {
@@ -96,7 +92,7 @@ class DocumenterSpec extends WordSpec with Matchers
       val responseEntity = HttpEntity("{}")
       val response = new HttpResponse(StatusCode.int2StatusCode(200), List(), responseEntity, HttpProtocols.`HTTP/1.0`)
       val expectedResponse = Response("OK")
-      val getOperation = Operation(List("json"), List("json"), List(), Map())
+      val getOperation = Operation(Set("json"), Set("json"), Set(), Map())
       val swagger = Swagger(Map(), Map("/users" -> Map("get" -> getOperation)),
         Some(""), Info("Test", ""))
       documenter.swaggerDocs.swagger = swagger

@@ -10,8 +10,8 @@ case class Definition(`type`: String, properties: Map[String, Property])
 
 case class Response(description: String)
 
-case class Operation(consumes: Seq[String], produces: Seq[String],
-                     parameters: Seq[Parameter],
+case class Operation(consumes: Set[String], produces: Set[String],
+                     parameters: Set[Parameter],
                      responses: Map[String, Response])
 
 case class Info(title: String, version: String)
@@ -32,8 +32,19 @@ class SwaggerDocs(apiVersion: String,
     if (!swagger.paths.contains(url)) {
       val paths = swagger.paths + (url -> Map(method -> operation))
       swagger = swagger.copy(paths = paths)
-    } else {
+    } else if (!swagger.paths(url).contains(method)) {
       val operations = swagger.paths(url) + (method -> operation)
+      val paths = swagger.paths + (url -> operations)
+      swagger = swagger.copy(paths = paths)
+    } else {
+      val existingOperation = swagger.paths(url)(method)
+      val newOperation = Operation(
+        existingOperation.consumes ++ operation.consumes,
+        existingOperation.produces ++ operation.produces,
+        existingOperation.parameters ++ operation.parameters,
+        existingOperation.responses ++ operation.responses
+      )
+      val operations = swagger.paths(url) + (method -> newOperation)
       val paths = swagger.paths + (url -> operations)
       swagger = swagger.copy(paths = paths)
     }
