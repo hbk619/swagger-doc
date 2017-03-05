@@ -89,7 +89,6 @@ window.swaggerUi = new SwaggerUi({
 
 ## TODO
 
-* Document response codes
 * Work out how to group routes (tags)
 * Figure out a friendlier way to do GET/DELETE requests
 
