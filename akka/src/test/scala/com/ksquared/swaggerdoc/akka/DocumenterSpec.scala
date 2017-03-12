@@ -107,6 +107,33 @@ class DocumenterSpec extends WordSpec with Matchers
       val operation: Operation = documenter.swaggerDocs.swagger.paths("/users")("get")
       operation.responses("200") shouldEqual expectedResponse
     }
+
+    "record response that has a body" in {
+      val mockFile = mock[File]
+      val documenter = Mockito.spy(new Documenter())
+      val req = Get("/users")
+      val responseEntity = HttpEntity("{}")
+      val response = new HttpResponse(StatusCode.int2StatusCode(200), List(), responseEntity, HttpProtocols.`HTTP/1.0`)
+      val expectedResponse = Response("OK", Some(Schema("#/definitions/TestClass")))
+      val getOperation = Operation(Set(), Set(), Set(), Map())
+      val body = TestClass("123", 21, isTrue = false, List("bob"))
+      val swagger = Swagger(Map(), Map("/users" -> Map("get" -> getOperation)),
+        Some(""), Info("Test", ""))
+      documenter.swaggerDocs.swagger = swagger
+      Mockito.doReturn(mockFile).when(documenter).createFile("test")
+      Mockito.doNothing().when(documenter).writeToFile(mockFile)
+
+      documenter.saveResponse("test", req, response, Some(TestClass("456", 22, isTrue = true, List("Fred"))))
+
+      val model: Definition = documenter.swaggerDocs.swagger.definitions("TestClass")
+      model.properties.keys.size shouldEqual 4
+      model.properties("id").`type` shouldBe "string"
+      model.properties("value").`type` shouldBe "integer"
+      model.properties("isTrue").`type` shouldBe "boolean"
+      model.properties("someList").`type` shouldBe "array"
+      val operation: Operation = documenter.swaggerDocs.swagger.paths("/users")("get")
+      operation.responses("200") shouldEqual expectedResponse
+    }
   }
 
 }

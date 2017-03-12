@@ -25,6 +25,11 @@ Add the dependency:
 
 Then write a test!
 
+It currently depends on a RootJsonFormat instance to be in scope
+to convert the response body to an instance to inspect.
+This is an implicit param to the perform method which also
+needs the return type of the body.
+
 ```
 
 import akka.http.scaladsl.testkit.ScalatestRouteTest
@@ -38,7 +43,7 @@ class RoutesSpec extends WordSpec with Matchers
         "post some things" in {
             val body = SomeBody("123")
             setup(Post("/some/url", body)
-                .perform("some route") {
+                .perform[Assertion, PostResponse]("some route") {
                   status shouldEqual OK
                   // rest of assertions
                 }
@@ -46,7 +51,7 @@ class RoutesSpec extends WordSpec with Matchers
         
         "get some things" in {
             setup(Get("/some/url/3456", ".*([0-9]*)".r("anId")
-                .perform("Get some item") {
+                .perform[Assertion, SomeItemResponse]("Get some item") {
                     status shouldEqual OK
                     // rest of assertions
                 }

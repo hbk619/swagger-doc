@@ -15,7 +15,7 @@ trait DocGenerator {
   implicit val propertyFormatter = jsonFormat1(Property)
   implicit val parameterFormatter = jsonFormat4(Parameter)
   implicit val definitionFormatter = jsonFormat2(Definition)
-  implicit val responseFormatter = jsonFormat1(Response)
+  implicit val responseFormatter = jsonFormat2(Response)
   implicit val operationFormatter = jsonFormat4(Operation)
   implicit val infoFormatter = jsonFormat2(Info)
   implicit val swaggerFormatter = jsonFormat5(Swagger)

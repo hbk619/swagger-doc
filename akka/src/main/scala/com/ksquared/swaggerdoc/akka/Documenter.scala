@@ -39,12 +39,20 @@ class Documenter extends Formatters {
     swaggerDocs.addOperation(url.path.toString(), req.method.value.toLowerCase, operation)
   }
 
-  def saveResponse(name: String, request: HttpRequest, response: HttpResponse) = {
+  def saveResponse[T](name: String, request: HttpRequest, response: HttpResponse, responseBody: Option[T] = None) = {
     val url = request.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
     val method = request.method.value.toLowerCase
     val path = url.path.toString()
+    var schema: Option[Schema] = None
+    if (responseBody.isDefined) {
+        val definition = createDefinition(responseBody.get)
+        val definitionName = responseBody.get.getClass.getSimpleName
+        swaggerDocs.addDefinition(definitionName, definition)
+        schema = Some(Schema(s"#/definitions/$definitionName"))
+    }
 
-    val responseObj = Response(response.status.reason())
+    val responseObj = Response(response.status.reason(), schema)
+
     swaggerDocs.addResponse(path, method, response.status.intValue(), responseObj)
     writeToFile(createFile(name))
   }

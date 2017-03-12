@@ -8,7 +8,7 @@ case class Parameter(`in`: String, name: String, schema: Option[Schema], `type`:
 
 case class Definition(`type`: String, properties: Map[String, Property])
 
-case class Response(description: String)
+case class Response(description: String, schema: Option[Schema] = None)
 
 case class Operation(consumes: Set[String], produces: Set[String],
                      parameters: Set[Parameter],
