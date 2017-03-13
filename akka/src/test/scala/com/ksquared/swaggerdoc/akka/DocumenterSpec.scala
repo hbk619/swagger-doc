@@ -94,7 +94,7 @@ class DocumenterSpec extends WordSpec with Matchers
       val expectedResponse = Response("OK")
       val getOperation = Operation(Set("json"), Set("json"), Set(), Map())
       val swagger = Swagger(Map(), Map("/users" -> Map("get" -> getOperation)),
-        Some(""), Info("Test", ""))
+        Set(), Some(""), Info("Test", ""))
       documenter.swaggerDocs.swagger = swagger
       Mockito.doReturn(mockFile).when(documenter).createFile("test")
       Mockito.doNothing().when(documenter).writeToFile(mockFile)
@@ -118,7 +118,7 @@ class DocumenterSpec extends WordSpec with Matchers
       val getOperation = Operation(Set(), Set(), Set(), Map())
       val body = TestClass("123", 21, isTrue = false, List("bob"))
       val swagger = Swagger(Map(), Map("/users" -> Map("get" -> getOperation)),
-        Some(""), Info("Test", ""))
+        Set(), Some(""), Info("Test", ""))
       documenter.swaggerDocs.swagger = swagger
       Mockito.doReturn(mockFile).when(documenter).createFile("test")
       Mockito.doNothing().when(documenter).writeToFile(mockFile)

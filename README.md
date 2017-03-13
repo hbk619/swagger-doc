@@ -104,7 +104,7 @@ window.swaggerUi = new SwaggerUi({
 
 ## TODO
 
-* Work out how to group routes (tags)
+* Recursively analyse request/response bodies
 * Figure out a friendlier way to do GET/DELETE requests
 
 ### Building the project

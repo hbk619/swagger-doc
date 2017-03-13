@@ -11,7 +11,8 @@ trait Formatters extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val parameterFormatter = jsonFormat4(Parameter)
   implicit val definitionFormatter = jsonFormat2(Definition)
   implicit val responseFormatter = jsonFormat2(Response)
-  implicit val operationFormatter = jsonFormat4(Operation)
+  implicit val tagFormatter = jsonFormat2(Tag)
+  implicit val operationFormatter = jsonFormat5(Operation)
   implicit val infoFormatter = jsonFormat2(Info)
-  implicit val swaggerFormatter = jsonFormat5(Swagger)
+  implicit val swaggerFormatter = jsonFormat6(Swagger)
 }
