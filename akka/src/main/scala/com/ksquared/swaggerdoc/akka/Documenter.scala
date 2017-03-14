@@ -23,13 +23,13 @@ class Documenter extends Formatters {
   val ListOptionType = typeOf[Option[List[_]]]
 
   def documentRequest[T](req: HttpRequest, body: T) = {
-    val definition = createDefinition(body)
+    val definitions = createDefinition(body)
     val definitionName = body.getClass.getSimpleName
     val url = req.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
     val parameter = Parameter("body", definitionName, Some(Schema(s"#/definitions/$definitionName")), None)
     val operation = Operation(Set("application/json"), Set("application/json"), Set(parameter), Map())
     swaggerDocs.addOperation(url.path.toString(), req.method.value.toLowerCase(), operation)
-    swaggerDocs.addDefinition(definitionName, definition)
+    swaggerDocs.addDefinitions(definitions)
   }
 
   def documentRequest(req: HttpRequest, pathRegEx: Regex) = {
@@ -45,9 +45,9 @@ class Documenter extends Formatters {
     val path = url.path.toString()
     var schema: Option[Schema] = None
     if (responseBody.isDefined) {
-        val definition = createDefinition(responseBody.get)
+        val definitions = createDefinition(responseBody.get)
         val definitionName = responseBody.get.getClass.getSimpleName
-        swaggerDocs.addDefinition(definitionName, definition)
+        swaggerDocs.addDefinitions(definitions)
         schema = Some(Schema(s"#/definitions/$definitionName"))
     }
 
@@ -67,25 +67,43 @@ class Documenter extends Formatters {
     FileUtils.write(file, swaggerFormatter.write(swaggerDocs.swagger).toString(), "UTF-8")
   }
 
-  private def createDefinition[T](body: T): Definition = {
+  private def createDefinition[T](body: T): Map[String, Definition] = {
     val rm = scala.reflect.runtime.currentMirror
-    val accessors = rm.classSymbol(body.getClass).toType.members.collect {
+    createDefinitionsFromSymbol(rm.classSymbol(body.getClass))
+  }
+
+  private def createDefinitionsFromSymbol(body: scala.reflect.runtime.universe.ClassSymbol): Map[String, Definition] = {
+    val definitionName = body.name.toString
+    val accessors = body.toType.members.collect {
       case m: MethodSymbol if m.isGetter && m.isPublic => m
     }
+
     val properties: Map[String, Property] = accessors.map(m => {
-      (m.name.toString, createProperty(m))
+      val property: Property = createProperty(m)
+      (m.name.toString, property)
     })(breakOut)
 
-    Definition("object", properties)
+    val definitions = properties
+      .filter(p => {
+        p._2.$ref.isDefined
+      })
+      .flatMap(p => {
+        val methodSymbol: MethodSymbol = accessors.find( m => {
+          m.name.toString.equals(p._1)
+        }).get
+        createDefinitionsFromSymbol(methodSymbol.returnType.typeSymbol.asClass)
+      })
+
+    definitions + (definitionName -> Definition("object", properties))
   }
 
   private def createProperty(propertyMethodSymbol: MethodSymbol): Property = {
     propertyMethodSymbol.returnType match {
-      case StringType | StringOptionType => Property("string")
-      case x if x <:< IntType | x <:< IntOptionType => Property("integer")
-      case x if x <:< BooleanType | x <:< BooleanOptionType => Property("boolean")
-      case x if x <:< ListType | x <:< ListOptionType => Property("array")
-      case _ => Property("")
+      case StringType | StringOptionType => Property(Some("string"))
+      case x if x <:< IntType | x <:< IntOptionType => Property(Some("integer"))
+      case x if x <:< BooleanType | x <:< BooleanOptionType => Property(Some("boolean"))
+      case x if x <:< ListType | x <:< ListOptionType => Property(Some("array"))
+      case returnType @ _ => Property(None, Some(s"#/definitions/${returnType.typeSymbol.name.toString}"))
     }
   }
 

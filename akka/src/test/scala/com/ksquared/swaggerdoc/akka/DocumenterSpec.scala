@@ -17,8 +17,10 @@ class DocumenterSpec extends WordSpec with Matchers
   with DefaultJsonProtocol with MockitoSugar {
 
   case class TestClass(id: String, value: Int, isTrue: Boolean, someList: List[String])
+  case class ComplexClass(id: String, testClass: TestClass)
   case class TestOptionalClass(id: Option[String], value: Option[Int], isTrue: Option[Boolean], someList: Option[List[String]])
   implicit val testClassFormatter: RootJsonFormat[TestClass] = jsonFormat4(TestClass)
+  implicit val complexClassFormatter: RootJsonFormat[ComplexClass] = jsonFormat2(ComplexClass)
   implicit val testOptionalClassFormatter: RootJsonFormat[TestOptionalClass] = jsonFormat4(TestOptionalClass)
 
   "Documenter" should {
@@ -34,10 +36,10 @@ class DocumenterSpec extends WordSpec with Matchers
       documenter.swaggerDocs.swagger.paths.size shouldEqual 1
       val model: Definition = documenter.swaggerDocs.swagger.definitions("TestClass")
       model.properties.keys.size shouldEqual 4
-      model.properties("id").`type` shouldBe "string"
-      model.properties("value").`type` shouldBe "integer"
-      model.properties("isTrue").`type` shouldBe "boolean"
-      model.properties("someList").`type` shouldBe "array"
+      model.properties("id").`type`.get shouldBe "string"
+      model.properties("value").`type`.get shouldBe "integer"
+      model.properties("isTrue").`type`.get shouldBe "boolean"
+      model.properties("someList").`type`.get shouldBe "array"
 
       val operations: Map[String, Operation] = documenter.swaggerDocs.swagger.paths("/test")
       operations.size shouldEqual 1
@@ -59,15 +61,42 @@ class DocumenterSpec extends WordSpec with Matchers
       val model: Option[Definition] = documenter.swaggerDocs.swagger.definitions.get("TestOptionalClass")
       model.isDefined shouldBe true
       model.get.properties.keys.size shouldEqual 4
-      model.get.properties("id").`type` shouldBe "string"
-      model.get.properties("value").`type` shouldBe "integer"
-      model.get.properties("isTrue").`type` shouldBe "boolean"
-      model.get.properties("someList").`type` shouldBe "array"
+      model.get.properties("id").`type`.get shouldBe "string"
+      model.get.properties("value").`type`.get shouldBe "integer"
+      model.get.properties("isTrue").`type`.get shouldBe "boolean"
+      model.get.properties("someList").`type`.get shouldBe "array"
 
       val operations: Map[String, Operation] = documenter.swaggerDocs.swagger.paths("/test")
       operations.get("post").isDefined shouldEqual true
       operations("post").parameters.size shouldEqual 1
       operations("post").parameters.head.schema.get.$ref shouldEqual "#/definitions/TestOptionalClass"
+    }
+
+    "record complex definitions request" in {
+      val documenter = new Documenter()
+      val testClass = TestClass("123", 21, isTrue = false, List("bob"))
+      val body = ComplexClass("987", testClass)
+      val req = Post("/test", body)
+
+      documenter.documentRequest(req, body)
+
+      documenter.swaggerDocs.swagger.definitions.keys.size shouldEqual 2
+      val complexModel: Definition = documenter.swaggerDocs.swagger.definitions("ComplexClass")
+      complexModel.properties.keys.size shouldEqual 2
+      complexModel.properties("id").`type`.get shouldBe "string"
+      complexModel.properties("testClass").$ref.get shouldBe "#/definitions/TestClass"
+
+      val model: Definition = documenter.swaggerDocs.swagger.definitions("TestClass")
+      model.properties.keys.size shouldEqual 4
+      model.properties("id").`type`.get shouldBe "string"
+      model.properties("value").`type`.get shouldBe "integer"
+      model.properties("isTrue").`type`.get shouldBe "boolean"
+      model.properties("someList").`type`.get shouldBe "array"
+
+      val operations: Map[String, Operation] = documenter.swaggerDocs.swagger.paths("/test")
+      operations.size shouldEqual 1
+      operations.get("post").isDefined shouldEqual true
+      operations("post").parameters.head.schema.get.$ref shouldEqual "#/definitions/ComplexClass"
     }
 
     "record path regex request" in {
@@ -127,10 +156,10 @@ class DocumenterSpec extends WordSpec with Matchers
 
       val model: Definition = documenter.swaggerDocs.swagger.definitions("TestClass")
       model.properties.keys.size shouldEqual 4
-      model.properties("id").`type` shouldBe "string"
-      model.properties("value").`type` shouldBe "integer"
-      model.properties("isTrue").`type` shouldBe "boolean"
-      model.properties("someList").`type` shouldBe "array"
+      model.properties("id").`type`.get shouldBe "string"
+      model.properties("value").`type`.get shouldBe "integer"
+      model.properties("isTrue").`type`.get shouldBe "boolean"
+      model.properties("someList").`type`.get shouldBe "array"
       val operation: Operation = documenter.swaggerDocs.swagger.paths("/users")("get")
       operation.responses("200") shouldEqual expectedResponse
     }

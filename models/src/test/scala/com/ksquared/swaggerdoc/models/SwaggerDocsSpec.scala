@@ -46,7 +46,7 @@ class SwaggerDocsSpec extends WordSpec with Matchers {
       "update a definition" in {
         val swaggerDoc = new SwaggerDocs("0.0.1", Some("/base"))
         val definition = Definition("object", Map())
-        val definition1 = Definition("object", Map("test" -> Property("array")))
+        val definition1 = Definition("object", Map("test" -> Property(Some("array"))))
 
         swaggerDoc.addDefinition("someName", definition)
         swaggerDoc.addDefinition("someName", definition1)
@@ -119,8 +119,8 @@ class SwaggerDocsSpec extends WordSpec with Matchers {
       "update definitions" in {
         val swaggerDoc = new SwaggerDocs("0.0.1", Some("/base"))
         val definition = Definition("object", Map())
-        val definition1 = Definition("object", Map("test" -> Property("array")))
-        val definition2 = Definition("object", Map("test" -> Property("array")))
+        val definition1 = Definition("object", Map("test" -> Property(Some("array"))))
+        val definition2 = Definition("object", Map("test" -> Property(Some("array"))))
 
         swaggerDoc.addDefinitions(Map("someName" -> definition, "otherDef" -> definition2))
         swaggerDoc.addDefinitions(Map("someName" -> definition1))

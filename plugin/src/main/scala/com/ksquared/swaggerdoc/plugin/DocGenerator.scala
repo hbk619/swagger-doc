@@ -12,7 +12,7 @@ import scala.collection.JavaConverters._
 
 trait DocGenerator {
   implicit val schemaFormatter = jsonFormat1(Schema)
-  implicit val propertyFormatter = jsonFormat1(Property)
+  implicit val propertyFormatter = jsonFormat2(Property)
   implicit val parameterFormatter = jsonFormat4(Parameter)
   implicit val definitionFormatter = jsonFormat2(Definition)
   implicit val responseFormatter = jsonFormat2(Response)

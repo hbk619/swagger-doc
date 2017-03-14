@@ -1,6 +1,6 @@
 package com.ksquared.swaggerdoc.models
 
-case class Property(`type`: String)
+case class Property(`type`: Option[String] = None, $ref: Option[String] = None)
 
 case class Schema($ref: String)
 
@@ -70,9 +70,7 @@ class SwaggerDocs(apiVersion: String,
   }
 
   def addDefinitions(definitions: Map[String, Definition]) = {
-    for {
-      (defName, definition) <- definitions
-    } yield addDefinition(defName, definition)
+    swagger = swagger.copy(definitions = swagger.definitions ++ definitions)
   }
 
   def addResponse(url: String, method: String, status: Int, response: Response) = {
