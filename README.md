@@ -104,7 +104,6 @@ window.swaggerUi = new SwaggerUi({
 
 ## TODO
 
-* Recursively analyse request/response bodies
 * Figure out a friendlier way to do GET/DELETE requests
 
 ### Building the project
