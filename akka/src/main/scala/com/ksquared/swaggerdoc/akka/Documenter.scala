@@ -21,6 +21,7 @@ class Documenter extends Formatters {
   val BooleanOptionType = typeOf[Option[Boolean]]
   val ListType = typeOf[List[_]]
   val ListOptionType = typeOf[Option[List[_]]]
+  val AnyOption = typeOf[Option[_]]
 
   def documentRequest[T](req: HttpRequest, body: T) = {
     val definitions = createDefinition(body)
@@ -91,7 +92,13 @@ class Documenter extends Formatters {
         val methodSymbol: MethodSymbol = accessors.find( m => {
           m.name.toString.equals(p._1)
         }).get
-        createDefinitionsFromSymbol(methodSymbol.returnType.typeSymbol.asClass)
+        methodSymbol.returnType match {
+          case x if x <:< AnyOption =>
+            createDefinitionsFromSymbol(methodSymbol.returnType.typeArgs.head.typeSymbol.asClass)
+          case _ =>
+            createDefinitionsFromSymbol(methodSymbol.returnType.typeSymbol.asClass)
+        }
+
       })
 
     definitions + (definitionName -> Definition("object", properties))
@@ -103,6 +110,7 @@ class Documenter extends Formatters {
       case x if x <:< IntType | x <:< IntOptionType => Property(Some("integer"))
       case x if x <:< BooleanType | x <:< BooleanOptionType => Property(Some("boolean"))
       case x if x <:< ListType | x <:< ListOptionType => Property(Some("array"))
+      case x if x <:< AnyOption => Property(None, Some(s"#/definitions/${x.typeArgs.head.typeSymbol.name.toString}"))
       case returnType @ _ => Property(None, Some(s"#/definitions/${returnType.typeSymbol.name.toString}"))
     }
   }

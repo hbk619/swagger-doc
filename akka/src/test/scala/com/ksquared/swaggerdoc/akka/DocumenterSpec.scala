@@ -18,9 +18,11 @@ class DocumenterSpec extends WordSpec with Matchers
 
   case class TestClass(id: String, value: Int, isTrue: Boolean, someList: List[String])
   case class ComplexClass(id: String, testClass: TestClass)
+  case class ComplexOptionalClass(id: String, testClass: Option[TestClass])
   case class TestOptionalClass(id: Option[String], value: Option[Int], isTrue: Option[Boolean], someList: Option[List[String]])
   implicit val testClassFormatter: RootJsonFormat[TestClass] = jsonFormat4(TestClass)
   implicit val complexClassFormatter: RootJsonFormat[ComplexClass] = jsonFormat2(ComplexClass)
+  implicit val complexOptionalClassFormatter: RootJsonFormat[ComplexOptionalClass] = jsonFormat2(ComplexOptionalClass)
   implicit val testOptionalClassFormatter: RootJsonFormat[TestOptionalClass] = jsonFormat4(TestOptionalClass)
 
   "Documenter" should {
@@ -97,6 +99,33 @@ class DocumenterSpec extends WordSpec with Matchers
       operations.size shouldEqual 1
       operations.get("post").isDefined shouldEqual true
       operations("post").parameters.head.schema.get.$ref shouldEqual "#/definitions/ComplexClass"
+    }
+
+    "record complex optional definitions request" in {
+      val documenter = new Documenter()
+      val testClass = TestClass("123", 21, isTrue = false, List("bob"))
+      val body = ComplexOptionalClass("987", Some(testClass))
+      val req = Post("/test", body)
+
+      documenter.documentRequest(req, body)
+
+      documenter.swaggerDocs.swagger.definitions.keys.size shouldEqual 2
+      val complexModel: Definition = documenter.swaggerDocs.swagger.definitions("ComplexOptionalClass")
+      complexModel.properties.keys.size shouldEqual 2
+      complexModel.properties("id").`type`.get shouldBe "string"
+      complexModel.properties("testClass").$ref.get shouldBe "#/definitions/TestClass"
+
+      val model: Definition = documenter.swaggerDocs.swagger.definitions("TestClass")
+      model.properties.keys.size shouldEqual 4
+      model.properties("id").`type`.get shouldBe "string"
+      model.properties("value").`type`.get shouldBe "integer"
+      model.properties("isTrue").`type`.get shouldBe "boolean"
+      model.properties("someList").`type`.get shouldBe "array"
+
+      val operations: Map[String, Operation] = documenter.swaggerDocs.swagger.paths("/test")
+      operations.size shouldEqual 1
+      operations.get("post").isDefined shouldEqual true
+      operations("post").parameters.head.schema.get.$ref shouldEqual "#/definitions/ComplexOptionalClass"
     }
 
     "record path regex request" in {
