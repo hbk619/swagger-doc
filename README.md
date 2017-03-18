@@ -49,6 +49,15 @@ class RoutesSpec extends WordSpec with Matchers
                 }
         }
         
+        "post some things to a parameterised url" in {
+            val body = SomeBody("123")
+            setup(Post("/some/url/1234", body, ".*\\/some/url/([0-9]{4})$".r("theId"))
+                .perform[Assertion, PostResponse]("some route") {
+                  status shouldEqual OK
+                  // rest of assertions
+                }
+        }
+        
         "get some things" in {
             setup(Get("/some/url/3456", ".*([0-9]*)".r("anId")
                 .perform[Assertion, SomeItemResponse]("Get some item") {
@@ -105,6 +114,7 @@ window.swaggerUi = new SwaggerUi({
 ## TODO
 
 * Figure out a friendlier way to do GET/DELETE requests
+* Optional parameters
 
 ### Building the project
 
