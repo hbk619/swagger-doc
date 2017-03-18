@@ -11,6 +11,9 @@ import spray.json._
 
 import scala.concurrent.Await
 
+case class ResponseDetails(name: String, request: HttpRequest, response: HttpResponse,
+                           formattedUrl: String, body: Option[_] = None)
+
 trait AkkaHttpDoc extends Formatters {
   self: RouteTest =>
 
@@ -18,24 +21,30 @@ trait AkkaHttpDoc extends Formatters {
 
   def setup(req: HttpRequest, pathRegEx: Regex) = {
     val swaggerDocs = new Documenter()
-    swaggerDocs.documentRequest(req, pathRegEx)
-    Request(route, req, swaggerDocs)
+    val url = swaggerDocs.documentRequest(req, pathRegEx)
+    Request(route, req, swaggerDocs, url)
   }
 
   def setup[T](req: HttpRequest, body: T) = {
     val documenter = new Documenter()
-    documenter.documentRequest(req, body)
-    Request(route, req, documenter)
+    val url = documenter.documentRequest(req, body)
+    Request(route, req, documenter, url)
   }
 
-  case class Request(route: Route, req: HttpRequest, documenter: Documenter) {
+  def setup[T](req: HttpRequest, body: T, pathRegEx: Regex) = {
+    val documenter = new Documenter()
+    val url = documenter.documentRequest(req, body, pathRegEx)
+    Request(route, req, documenter, url)
+  }
+
+  case class Request(route: Route, req: HttpRequest, documenter: Documenter, formattedUrl: String) {
 
     def perform[T, U](name: String)(body: => T)(implicit formatter: RootJsonFormat[U]): T = {
       req ~> Route.seal(route) ~> check {
         val getEntity = response.entity.toStrict(5.seconds)
           .map(_.data.decodeString("UTF-8"))
         val responseString = Await.result(getEntity,10.seconds)
-        documenter.saveResponse(name, req, response, Some(formatter.read(responseString.parseJson)))
+        documenter.saveResponse(ResponseDetails(name, req, response, formattedUrl, Some(formatter.read(responseString.parseJson))))
         body
       }
     }

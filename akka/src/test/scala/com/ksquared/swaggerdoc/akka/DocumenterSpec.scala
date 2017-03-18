@@ -138,9 +138,33 @@ class DocumenterSpec extends WordSpec with Matchers
       documenter.swaggerDocs.swagger.paths.keys.size shouldEqual 1
 
       val expectedParams = Set(Parameter("path", "userId", None, Some("string")), Parameter("path", "nickname", None, Some("string")))
-      val operations: Map[String, Operation] = documenter.swaggerDocs.swagger.paths("/users/123456/nickname/98765")
+      val operations: Map[String, Operation] = documenter.swaggerDocs.swagger.paths("/users/{userId}/nickname/{nickname}")
 
       operations("get").parameters shouldEqual expectedParams
+    }
+
+    "record path and body request" in {
+      val documenter = new Documenter()
+      val body = TestClass("123", 21, isTrue = false, List("bob"))
+      val req = Post("/users/123456", body)
+
+      documenter.documentRequest(req, body, ".*\\/users\\/([0-9]{6})$".r("userId"))
+
+      documenter.swaggerDocs.swagger.definitions.keys.size shouldEqual 1
+      documenter.swaggerDocs.swagger.paths.size shouldEqual 1
+      val model: Definition = documenter.swaggerDocs.swagger.definitions("TestClass")
+      model.properties.keys.size shouldEqual 4
+      model.properties("id").`type`.get shouldBe "string"
+      model.properties("value").`type`.get shouldBe "integer"
+      model.properties("isTrue").`type`.get shouldBe "boolean"
+      model.properties("someList").`type`.get shouldBe "array"
+
+      val expectedParams = Set(Parameter("body", "TestClass", Some(Schema("#/definitions/TestClass")), None), Parameter("path", "userId", None, Some("string")))
+
+      val operations: Map[String, Operation] = documenter.swaggerDocs.swagger.paths("/users/{userId}")
+      operations.size shouldEqual 1
+      operations.get("post").isDefined shouldEqual true
+      operations("post").parameters shouldEqual expectedParams
     }
 
     "record response" in {
@@ -157,7 +181,7 @@ class DocumenterSpec extends WordSpec with Matchers
       Mockito.doReturn(mockFile).when(documenter).createFile("test")
       Mockito.doNothing().when(documenter).writeToFile(mockFile)
 
-      documenter.saveResponse("test", req, response)
+      documenter.saveResponse(ResponseDetails("test", req, response, "/users"))
 
       Mockito.verify(documenter).createFile("test")
       Mockito.verify(documenter).writeToFile(mockFile)
@@ -181,7 +205,7 @@ class DocumenterSpec extends WordSpec with Matchers
       Mockito.doReturn(mockFile).when(documenter).createFile("test")
       Mockito.doNothing().when(documenter).writeToFile(mockFile)
 
-      documenter.saveResponse("test", req, response, Some(TestClass("456", 22, isTrue = true, List("Fred"))))
+      documenter.saveResponse(ResponseDetails("test", req, response, "/users", Some(TestClass("456", 22, isTrue = true, List("Fred")))))
 
       val model: Definition = documenter.swaggerDocs.swagger.definitions("TestClass")
       model.properties.keys.size shouldEqual 4

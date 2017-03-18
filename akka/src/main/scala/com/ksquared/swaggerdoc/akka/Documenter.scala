@@ -23,39 +23,54 @@ class Documenter extends Formatters {
   val ListOptionType = typeOf[Option[List[_]]]
   val AnyOption = typeOf[Option[_]]
 
-  def documentRequest[T](req: HttpRequest, body: T) = {
+  def documentRequest[T](req: HttpRequest, body: T): String = {
+    val definitions = createDefinition(body)
+    val definitionName = body.getClass.getSimpleName
+    val url = req.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
+    val path = url.path.toString()
+    val parameter = Parameter("body", definitionName, Some(Schema(s"#/definitions/$definitionName")), None)
+    val operation = Operation(Set("application/json"), Set("application/json"), Set(parameter), Map())
+    swaggerDocs.addOperation(path, req.method.value.toLowerCase(), operation)
+    swaggerDocs.addDefinitions(definitions)
+    path
+  }
+
+  def documentRequest[T](req: HttpRequest, body: T, pathRegEx: Regex): String = {
     val definitions = createDefinition(body)
     val definitionName = body.getClass.getSimpleName
     val url = req.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
     val parameter = Parameter("body", definitionName, Some(Schema(s"#/definitions/$definitionName")), None)
-    val operation = Operation(Set("application/json"), Set("application/json"), Set(parameter), Map())
-    swaggerDocs.addOperation(url.path.toString(), req.method.value.toLowerCase(), operation)
+    val parameters = getUrlParameters(url, pathRegEx)
+    val operation = Operation(Set("application/json"), Set("application/json"), parameters + parameter, Map())
+    val parameterisedUrl = formatUrl(url, pathRegEx)
+    swaggerDocs.addOperation(parameterisedUrl, req.method.value.toLowerCase(), operation)
     swaggerDocs.addDefinitions(definitions)
+    parameterisedUrl
   }
 
-  def documentRequest(req: HttpRequest, pathRegEx: Regex) = {
+  def documentRequest(req: HttpRequest, pathRegEx: Regex): String = {
     val url = req.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
     val parameters = getUrlParameters(url, pathRegEx)
     val operation = Operation(Set("application/json"), Set("application/json"), parameters, Map())
-    swaggerDocs.addOperation(url.path.toString(), req.method.value.toLowerCase, operation)
+    val parameterisedUrl = formatUrl(url, pathRegEx)
+    swaggerDocs.addOperation(parameterisedUrl, req.method.value.toLowerCase, operation)
+    parameterisedUrl
   }
 
-  def saveResponse[T](name: String, request: HttpRequest, response: HttpResponse, responseBody: Option[T] = None) = {
-    val url = request.uri.toEffectiveHttpRequestUri(Uri.Host("localhost"), 8080)
-    val method = request.method.value.toLowerCase
-    val path = url.path.toString()
+  def saveResponse[T](responseDetails: ResponseDetails) = {
+    val method = responseDetails.request.method.value.toLowerCase
     var schema: Option[Schema] = None
-    if (responseBody.isDefined) {
-        val definitions = createDefinition(responseBody.get)
-        val definitionName = responseBody.get.getClass.getSimpleName
-        swaggerDocs.addDefinitions(definitions)
-        schema = Some(Schema(s"#/definitions/$definitionName"))
+    if (responseDetails.body.isDefined) {
+      val definitions = createDefinition(responseDetails.body.get)
+      val definitionName = responseDetails.body.get.getClass.getSimpleName
+      swaggerDocs.addDefinitions(definitions)
+      schema = Some(Schema(s"#/definitions/$definitionName"))
     }
 
-    val responseObj = Response(response.status.reason(), schema)
+    val responseObj = Response(responseDetails.response.status.reason(), schema)
 
-    swaggerDocs.addResponse(path, method, response.status.intValue(), responseObj)
-    writeToFile(createFile(name))
+    swaggerDocs.addResponse(responseDetails.formattedUrl, method, responseDetails.response.status.intValue(), responseObj)
+    writeToFile(createFile(responseDetails.name))
   }
 
   def createFile(name: String) = {
@@ -89,7 +104,7 @@ class Documenter extends Formatters {
         p._2.$ref.isDefined
       })
       .flatMap(p => {
-        val methodSymbol: MethodSymbol = accessors.find( m => {
+        val methodSymbol: MethodSymbol = accessors.find(m => {
           m.name.toString.equals(p._1)
         }).get
         methodSymbol.returnType match {
@@ -115,12 +130,23 @@ class Documenter extends Formatters {
     }
   }
 
+  private def formatUrl(url: Uri, pathRegEx: Regex): String = {
+    var path = url.path.toString()
+    pathRegEx.findAllMatchIn(path)
+      .toSet.foreach { m: Regex.Match =>
+      m.groupNames.foreach { name =>
+        path = path.replace(m.group(name), s"{$name}")
+      }
+    }
+    path
+  }
+
   private def getUrlParameters(url: Uri, pathRegEx: Regex): Set[Parameter] = {
     pathRegEx.findAllMatchIn(url.path.toString())
       .toSet.flatMap { m: Regex.Match =>
-        m.groupNames.map { name =>
-          Parameter("path", name, None, Some("string"))
-        }
+      m.groupNames.map { name =>
+        Parameter("path", name, None, Some("string"))
       }
+    }
   }
 }
